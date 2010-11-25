@@ -52,7 +52,6 @@ typedef int (*json_cb) (json_parser*);
 
 struct json_parser {
   unsigned short state;
-  unsigned short stack[JSON_PARSER_DEPTH];
   size_t stack_size;
 
   void *data;
@@ -69,10 +68,12 @@ struct json_parser {
   json_data_cb on_int;
   json_data_cb on_frac;
   json_data_cb on_exp;
+  unsigned short stack[JSON_PARSER_DEPTH];
 };
 
 void json_parser_init(json_parser *);
-size_t json_parser_execute(json_parser *, const char *data, size_t len);
+size_t json_parser_execute(json_parser *, const char *data, size_t len,
+  size_t depth);
 
 #ifdef __cplusplus
 }

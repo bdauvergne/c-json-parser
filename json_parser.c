@@ -30,10 +30,6 @@
 # define NULL ((void*)0)
 #endif
 
-#ifndef MIN
-# define MIN(a,b) ((a) < (b) ? (a) : (b))
-#endif
-
 #define MARK \
 do {                                                                 \
   parser->data_mark = p;                                            \
@@ -67,8 +63,6 @@ DEFINE_CALLBACK(int)
 DEFINE_CALLBACK(frac)
 DEFINE_CALLBACK(exp)
 
-
-
 enum state
   { s_eof
   , s_start_value
@@ -87,19 +81,13 @@ enum state
   , s_object
   };
 
-
-#if JSON_PARSER_STRICT
-# define STRICT_CHECK(cond) if (cond) goto error
-#else
-# define STRICT_CHECK(cond)
-#endif
-
 #define WS(ch) (ch == 0x20 || ch == 0x09 || ch == 0x0A || ch == 0x0D)
-#define IF_WS if WS(ch) break;
+#define CHECK_DEPTH if (stack_size == depth) goto error;
 
 size_t json_parser_execute (json_parser *parser,
                             const char *data,
-                            size_t len)
+                            size_t len,
+                            size_t depth)
 {
   char c, ch;
   const char *p = data, *pe;
@@ -148,6 +136,7 @@ size_t json_parser_execute (json_parser *parser,
           }
           /* start of an array */
           if (ch == '[') {
+            CHECK_DEPTH;
             stack[stack_size++] = s_array;
             state = s_start_value;
             CALLBACK2(array_begin);
@@ -155,6 +144,7 @@ size_t json_parser_execute (json_parser *parser,
           }
           /* start of an object */
           if (ch == '{') {
+            CHECK_DEPTH;
             stack[stack_size++] = s_object;
             state = s_start_key_string;
             CALLBACK2(object_begin);

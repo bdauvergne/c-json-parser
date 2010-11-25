@@ -11,7 +11,7 @@ void test_json_content(const char *data) {
 	size_t consumed;
 
 	json_parser_init(&parser);
-	consumed = json_parser_execute(&parser, data, strlen(data));
+	consumed = json_parser_execute(&parser, data, strlen(data), JSON_PARSER_DEPTH);
 	assert(strlen(data) == consumed);
 	assert(parser.state == 0);
 }
