@@ -72,7 +72,7 @@ size_t json_parser_execute (json_parser *parser,
   size_t stack_size = parser->stack_size;
   unsigned short *stack = parser->stack;
 
-  for (p=data, pe=data+len; p != pe; p++, parser->nread++) {
+  for (p=data, pe=data+len; p != pe; p++) {
     ch = *p;
 
     /* skip ws */
