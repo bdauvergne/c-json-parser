@@ -308,6 +308,7 @@ json_parser_init (json_parser *parser)
   parser->data_mark = NULL;
   parser->data_size = 0;
   parser->stop_on_callback = 0;
+  parser->nread = 0;
 
   parser->on_array_begin = NULL;
   parser->on_object_begin = NULL;

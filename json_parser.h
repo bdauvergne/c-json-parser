@@ -36,6 +36,7 @@ typedef int (*json_cb) (json_parser*);
 struct json_parser {
   unsigned short state;
   size_t stack_size;
+  size_t nread;
   unsigned short stop_on_callback : 1;
 
   void *data;
