@@ -25,7 +25,10 @@ typedef struct json_parser json_parser;
  * then halt execution.
  *
  * json_data_cb does not return data chunks. It will be call arbitrarilly
- * many times for each string.
+ * many times for each string, same for on_int, on_frac and on on_exp. The and ofan in of a string
+ * will be signaled by a call to on_separator, between a key and a value, or between two values of
+ * an array or an object, or a call to on_end at the end of an array or an object.
+ *
  */
 typedef int (*json_data_cb) (json_parser*, const char *at, size_t length);
 typedef int (*json_cb) (json_parser*);
