@@ -58,6 +58,23 @@ enum state
   , s_object
   };
 
+#define BIT_PER_LEVEL 2
+#define OFFSET_SHIFT  (3-BIT_PER_LEVEL)
+#define SHIFT_MASK    ~(255 << (3-BIT_PER_LEVEL))
+#define READ_MASK     ~(255 << BIT_PER_LEVEL)
+#define VALUE_SHIFT   (((depth & SHIFT_MASK)*BIT_PER_LEVEL))
+
+static inline int get_stack(unsigned char *stack, int depth) {
+	unsigned int offset = depth >> OFFSET_SHIFT;
+	return (stack[offset] >> VALUE_SHIFT) & READ_MASK;
+}
+
+static inline int set_stack(unsigned char *stack, int depth, int value) {
+	unsigned int offset = depth >> OFFSET_SHIFT;
+	unsigned char mask = READ_MASK << VALUE_SHIFT;
+	stack[offset] = (stack[offset] & ~mask) | (value ? (value & READ_MASK) << VALUE_SHIFT : 0);
+}
+
 #define WS(ch) (ch == 0x20 || ch == 0x09 || ch == 0x0A || ch == 0x0D)
 #define CHECK_DEPTH if (stack_size == depth) goto error;
 
