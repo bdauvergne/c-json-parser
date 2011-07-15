@@ -33,11 +33,16 @@ typedef struct json_parser json_parser;
 typedef int (*json_data_cb) (json_parser*, const char *at, size_t length);
 typedef int (*json_cb) (json_parser*);
 
+/* How much state to encode at each state level, currently 3 */
+#define JSON_PARSER_STACK_BIT_PER_LEVEL 1
+#define JSON_PARSER_STACK_SIZE (JSON_PARSER_DEPTH/(sizeof(char)*(8>>(JSON_PARSER_STACK_BIT_PER_LEVEL-1)))+1)
+
 struct json_parser {
   unsigned short state;
   size_t stack_size;
   size_t nread;
   unsigned short stop_on_callback : 1;
+  unsigned short error : 1;
 
   void *data;
   const char *data_mark;
@@ -53,7 +58,7 @@ struct json_parser {
   json_data_cb on_int;
   json_data_cb on_frac;
   json_data_cb on_exp;
-  unsigned short stack[JSON_PARSER_DEPTH];
+  unsigned char stack[JSON_PARSER_STACK_SIZE];
 };
 
 void json_parser_init(json_parser *);

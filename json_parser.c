@@ -58,9 +58,14 @@ enum state
   , s_object
   };
 
-#define BIT_PER_LEVEL 2
-#define OFFSET_SHIFT  (3-BIT_PER_LEVEL)
-#define SHIFT_MASK    ~(255 << (3-BIT_PER_LEVEL))
+enum stack_state
+  { ss_array,
+    ss_object
+  };
+
+#define BIT_PER_LEVEL JSON_PARSER_STACK_BIT_PER_LEVEL
+#define OFFSET_SHIFT  (4-BIT_PER_LEVEL)
+#define SHIFT_MASK    ~(255 << (4-BIT_PER_LEVEL))
 #define READ_MASK     ~(255 << BIT_PER_LEVEL)
 #define VALUE_SHIFT   (((depth & SHIFT_MASK)*BIT_PER_LEVEL))
 
@@ -87,7 +92,7 @@ size_t json_parser_execute (json_parser *parser,
   const char *p = data, *pe;
   enum state state = parser->state;
   size_t stack_size = parser->stack_size;
-  unsigned short *stack = parser->stack;
+  unsigned char *stack = parser->stack;
 
   for (p=data, pe=data+len; p != pe; p++) {
     ch = *p;
@@ -131,7 +136,7 @@ size_t json_parser_execute (json_parser *parser,
           /* start of an array */
           if (ch == '[') {
             CHECK_DEPTH;
-            stack[stack_size++] = s_array;
+            set_stack(stack, stack_size++, ss_array);
             state = s_start_value;
             CALLBACK2(array_begin);
             break;
@@ -139,7 +144,7 @@ size_t json_parser_execute (json_parser *parser,
           /* start of an object */
           if (ch == '{') {
             CHECK_DEPTH;
-            stack[stack_size++] = s_object;
+            set_stack(stack, stack_size++, ss_object);
             state = s_start_key_string;
             CALLBACK2(object_begin);
             break;
@@ -159,13 +164,13 @@ size_t json_parser_execute (json_parser *parser,
             break;
           }
         case s_separator_or_end:
-          if (stack[stack_size-1] == s_array && ch == ',') {
+          if (get_stack(stack, stack_size-1) == ss_array && ch == ',') {
             CALLBACK2(separator);
             state = s_start_value;
             break;
           }
-          if ((stack[stack_size-1] == s_array && ch == ']') 
-           || (stack[stack_size-1] == s_object && ch == '}')) {
+          if ((get_stack(stack, stack_size-1) == ss_array && ch == ']') 
+           || (get_stack(stack, stack_size-1) == ss_object && ch == '}')) {
             CALLBACK2(end);
             --stack_size;
             if (stack_size == 1) {
@@ -173,7 +178,7 @@ size_t json_parser_execute (json_parser *parser,
             }
             break;
           }
-          if (stack[stack_size-1] == s_object && ch == ',') {
+          if (get_stack(stack, stack_size-1) == ss_object && ch == ',') {
             CALLBACK2(separator);
             state = s_start_key_string;
             break;
@@ -318,23 +323,8 @@ error:
 void
 json_parser_init (json_parser *parser)
 {
+  memset(parser, 0, sizeof(*parser));
   parser->state = s_start_value;
-
-  parser->stack[0] = s_eof;
   parser->stack_size = 1;
-  parser->data_mark = NULL;
-  parser->data_size = 0;
-  parser->stop_on_callback = 0;
-  parser->nread = 0;
-
-  parser->on_array_begin = NULL;
-  parser->on_object_begin = NULL;
-  parser->on_string = NULL;
-  parser->on_separator = NULL;
-  parser->on_end = NULL;
-  parser->on_minus = NULL;
-  parser->on_int = NULL;
-  parser->on_frac = NULL;
-  parser->on_exp = NULL;
 }
 
